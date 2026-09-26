@@ -22,7 +22,7 @@ class TaskTransitionView(APIView):
         request=TaskTransitionSerializer,
         responses={200: TaskSerializer},
         summary="Transition Task Workflow Status",
-        description="Executes a state machine transition (TODO -> IN_PROGRESS -> READY_FOR_REVIEW -> DONE / TODO). Role restrictions enforced per transition."
+        description="Executes a state machine transition (TODO -> IN_PROGRESS -> READY_FOR_REVIEW -> DONE / TODO). Role restrictions enforced per transition (READY_FOR_REVIEW -> DONE / TODO requires Task Reporter / Task creator approval)."
     )
     def post(self, request, pk: int, *args, **kwargs):
         task = TaskSelector.get_task_by_id(pk, request.user)

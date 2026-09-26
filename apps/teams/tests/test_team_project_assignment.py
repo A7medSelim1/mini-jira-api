@@ -96,3 +96,16 @@ class TeamProjectAssignmentTest(APITestCase):
 
         # 4. Project reporter is ALWAYS eligible for project tasks
         self.assertTrue(TaskService.is_assignee_eligible(self.project, self.reporter))
+
+    def test_project_team_assignment_returns_correct_member_count(self):
+        # Ensure team has exactly 3 members
+        TeamMembership.objects.create(team=self.team, user=self.member)
+        TeamMembership.objects.create(team=self.team, user=self.outsider)
+        self.assertEqual(self.team.memberships.count(), 3)
+
+        self.client.force_authenticate(user=self.reporter)
+        response = self.client.post(self.project_teams_url, {'team_id': self.team.id}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(response.data['success'])
+        self.assertEqual(response.data['data']['team']['member_count'], 3)
+

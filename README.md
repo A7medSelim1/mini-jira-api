@@ -126,16 +126,19 @@ python manage.py spectacular --file schema.yml
 ## 8. Core Business Rules & Permissions
 
 ### Role Matrix
-1. **Project Reporter (Creator)**:
-   - Creator of the project.
-   - Full permissions: update project settings, assign/remove teams, soft-delete project, assign/reassign tasks, approve/reject task transitions (`READY_FOR_REVIEW` → `DONE` / `TODO`), delete comments for moderation.
-2. **Team Member**:
+1. **Project Reporter (Project Creator)**:
+   - Creator of the project workspace.
+   - Project permissions: update project settings, assign/remove teams, soft-delete project, assign/reassign tasks, delete comments for moderation.
+2. **Task Reporter (Task Creator)**:
+   - Creator of a specific Task/Card.
+   - Holds task-level approval authority: approve/reject task transitions (`READY_FOR_REVIEW` → `DONE` / `TODO`) for tasks they created.
+3. **Team Member**:
    - User belonging to a `Team` assigned to the `Project`.
    - Access permissions: create tasks in project, view project tasks, view project activities, add comments, edit/delete own comments.
-3. **Task Assignee**:
-   - User assigned to a specific task (must belong to a team assigned to the project or be the reporter).
+4. **Task Assignee**:
+   - User assigned to a specific task (must belong to a team assigned to the project or be project reporter).
    - Workflow permissions: move task `TODO` → `IN_PROGRESS` and `IN_PROGRESS` → `READY_FOR_REVIEW`.
-4. **Outsider (Unassigned User)**:
+5. **Outsider (Unassigned User)**:
    - Zero access to unassigned projects or tasks (`404 Not Found`).
 
 ### Task Workflow State Machine
@@ -143,18 +146,18 @@ python manage.py spectacular --file schema.yml
   [TODO]  ----(Assignee)---->  [IN_PROGRESS]  ----(Assignee)---->  [READY_FOR_REVIEW]
      ^                                                                      |
      |                                                                      |
-     +--------------------------(Reporter Rejects)--------------------------+
+     +-----------------------(Task Reporter Rejects)------------------------+
                                                                             |
-                                                                   (Reporter Approves)
+                                                                  (Task Reporter Approves)
                                                                             v
                                                                          [DONE]
 ```
 
 - **Transitions**:
-  - `TODO` → `IN_PROGRESS`: Executed by **Assignee**.
-  - `IN_PROGRESS` → `READY_FOR_REVIEW`: Executed by **Assignee**.
-  - `READY_FOR_REVIEW` → `DONE`: Executed by **Project Reporter** (Approval).
-  - `READY_FOR_REVIEW` → `TODO`: Executed by **Project Reporter** (Rejection).
+  - `TODO` → `IN_PROGRESS`: Executed by **Assignee** (or Task Reporter).
+  - `IN_PROGRESS` → `READY_FOR_REVIEW`: Executed by **Assignee** (or Task Reporter).
+  - `READY_FOR_REVIEW` → `DONE`: Executed by **Task Reporter / Task Creator** (Approval).
+  - `READY_FOR_REVIEW` → `TODO`: Executed by **Task Reporter / Task Creator** (Rejection).
 - **Direct Status Modification**: Updating task `status` via `PATCH /api/v1/tasks/{id}/` is strictly blocked (`400 Bad Request`). Status changes must go through `POST /api/v1/tasks/{id}/transition/`.
 
 ---

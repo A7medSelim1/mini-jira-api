@@ -42,6 +42,25 @@ class TaskViewsTest(APITestCase):
         # Verify activity created
         self.assertTrue(ActivityLog.objects.filter(project=self.project, action=ActivityAction.TASK_CREATED).exists())
 
+    def test_list_and_create_tasks_route(self):
+        # Verify URL reversal
+        self.assertEqual(self.project_tasks_url, f'/api/v1/projects/{self.project.id}/tasks/')
+
+        self.client.force_authenticate(user=self.assignee)
+        # Test GET tasks route
+        get_response = self.client.get(self.project_tasks_url)
+        self.assertEqual(get_response.status_code, status.HTTP_200_OK)
+
+        # Test POST create task route
+        post_response = self.client.post(self.project_tasks_url, {
+            'title': 'New Task via Route',
+            'priority': TaskPriority.MEDIUM
+        }, format='json')
+        self.assertEqual(post_response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(post_response.data['success'])
+        self.assertEqual(post_response.data['data']['title'], 'New Task via Route')
+
+
     def test_create_task_ineligible_assignee_fails(self):
         self.client.force_authenticate(user=self.reporter)
         payload = {

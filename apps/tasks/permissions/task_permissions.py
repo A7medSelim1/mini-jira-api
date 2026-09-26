@@ -30,25 +30,24 @@ class CanTransitionTask:
         if not actor or not actor.is_authenticated:
             return False
 
-        project = task.project
-        is_reporter = (project.reporter_id == actor.id)
+        is_task_reporter = (task.created_by_id == actor.id)
         is_assignee = (task.assignee_id == actor.id)
 
         current_status = task.status
 
         # Transition rules
         if current_status == TaskStatus.TODO and target_status == TaskStatus.IN_PROGRESS:
-            return is_assignee or is_reporter
+            return is_assignee 
 
         if current_status == TaskStatus.IN_PROGRESS and target_status == TaskStatus.READY_FOR_REVIEW:
-            return is_assignee or is_reporter
+            return is_assignee 
 
         if current_status == TaskStatus.READY_FOR_REVIEW and target_status == TaskStatus.DONE:
-            # Reporter ONLY
-            return is_reporter
+            # Task Reporter (Task creator) ONLY
+            return is_task_reporter
 
         if current_status == TaskStatus.READY_FOR_REVIEW and target_status == TaskStatus.TODO:
-            # Reporter ONLY (Rejection)
-            return is_reporter
+            # Task Reporter (Task creator) ONLY (Rejection)
+            return is_task_reporter
 
         return False

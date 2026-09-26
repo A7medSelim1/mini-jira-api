@@ -84,6 +84,23 @@ class TaskWorkflowTest(APITestCase):
         res = self.client.post(url, {'status': TaskStatus.DONE}, format='json')
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_project_reporter_cannot_approve_other_users_task(self):
+        task = Task.objects.create(
+            task_key='FLOW-2', sequence_number=2, title='Task 2',
+            project=self.project, created_by=self.team_member, assignee=self.assignee,
+            status=TaskStatus.READY_FOR_REVIEW
+        )
+        url = reverse('task-transition', kwargs={'pk': task.id})
+        # self.reporter is Project Reporter, but self.team_member is Task Reporter (creator)
+        self.client.force_authenticate(user=self.reporter)
+        res = self.client.post(url, {'status': TaskStatus.DONE}, format='json')
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
+        # Task Reporter (team_member) CAN approve
+        self.client.force_authenticate(user=self.team_member)
+        res_ok = self.client.post(url, {'status': TaskStatus.DONE}, format='json')
+        self.assertEqual(res_ok.status_code, status.HTTP_200_OK)
+
     def test_non_assignee_team_member_cannot_start_task(self):
         task = Task.objects.create(
             task_key='FLOW-1', sequence_number=1, title='Task 1',

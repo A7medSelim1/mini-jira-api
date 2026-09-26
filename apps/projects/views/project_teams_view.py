@@ -8,7 +8,7 @@ from apps.projects.serializers import ProjectTeamSerializer
 from apps.projects.selectors import ProjectSelector
 from apps.projects.services import ProjectService
 from apps.projects.permissions import IsProjectReporter
-from apps.teams.models import Team
+from apps.teams.selectors import TeamSelector
 
 
 class ProjectTeamsListCreateView(APIView):
@@ -41,10 +41,20 @@ class ProjectTeamsListCreateView(APIView):
         serializer = ProjectTeamSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        team = Team.objects.get(id=serializer.validated_data['team_id'])
+        team = TeamSelector.get_team_by_id(serializer.validated_data['team_id'])
+        if not team:
+            return Response({
+                "success": False,
+                "error": {
+                    "code": "NotFound",
+                    "message": "Team not found.",
+                    "details": {}
+                }
+            }, status=status.HTTP_404_NOT_FOUND)
 
         try:
             assignment = ProjectService.assign_team(project=project, team=team, actor=request.user)
+            assignment.team = team
         except ValidationError as e:
             return Response({
                 "success": False,

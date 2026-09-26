@@ -22,7 +22,6 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-from apps.tasks.views import TaskListCreateView
 from apps.comments.views import CommentListCreateView
 from apps.activities.views import ProjectActivityListView, TaskActivityListView
 
@@ -38,9 +37,8 @@ urlpatterns = [
     path('api/v1/auth/', include('apps.accounts.urls.auth_urls')),
     path('api/v1/teams/', include('apps.teams.urls.team_urls')),
     path('api/v1/projects/', include('apps.projects.urls.project_urls')),
-    path('api/v1/projects/<int:project_id>/tasks/', TaskListCreateView.as_view(), name='project-tasks-list-create'),
     path('api/v1/projects/<int:project_id>/activities/', ProjectActivityListView.as_view(), name='project-activities-list'),
-    path('api/v1/tasks/', include('apps.tasks.urls.task_urls')),
+    path('api/v1/', include('apps.tasks.urls.task_urls')),
     path('api/v1/tasks/<int:task_id>/comments/', CommentListCreateView.as_view(), name='task-comments-list-create'),
     path('api/v1/tasks/<int:task_id>/activities/', TaskActivityListView.as_view(), name='task-activities-list'),
     path('api/v1/comments/', include('apps.comments.urls.comment_urls')),

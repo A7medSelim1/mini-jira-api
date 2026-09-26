@@ -89,3 +89,10 @@ class Task(models.Model):
 
     def __str__(self):
         return f"[{self.task_key}] {self.title}"
+
+    @property
+    def reporter(self):
+        """
+        Task Reporter is the user who created the task (Task Creator).
+        """
+        return self.created_by
